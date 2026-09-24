@@ -371,6 +371,66 @@
       lastFetch: null
     };
 
+    const $ = (selector, root=document) => root.querySelector(selector);
+    const cards = [...document.querySelectorAll('.rate-card')];
+
+    function formatNumber(value, max=4){
+      return Number(value).toLocaleString('ru-RU', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: max
+      });
+    }
+
+    function moscowTimeString(date){
+      return new Intl.DateTimeFormat('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+
+    function setStatus(type, text){
+      const dot = $('#statusDot');
+      if (dot) dot.className = 'dot ' + (type || '');
+      const statusText = $('#statusText');
+      if (statusText) statusText.textContent = text;
+    }
+
+    function renderCard(card){
+      const currency = card.dataset.currency;
+      const rate = state.rates[currency];
+      if (!rate) return;
+
+      const rateEl = document.getElementById(currency.toLowerCase() + 'Rate');
+      if (rateEl) rateEl.textContent = formatNumber(rate, 4);
+
+      const input = $('.amount', card);
+      const from = $('.amount-label', card)?.textContent || currency;
+      const to = $('.result-label', card)?.textContent || 'RUB';
+      const amount = Math.max(
+        0,
+        Number(String(input?.value || 0).replace(',', '.')) || 0
+      );
+
+      const value = from === 'RUB'
+        ? amount / rate
+        : amount * rate;
+
+      const result = $('.result', card);
+      if (result) result.textContent = `${formatNumber(value, 4)} ${to}`;
+    }
+
+    function renderAll(){
+      cards.forEach(renderCard);
+
+      if (state.date){
+        const stamp = state.lastFetch
+          ? ` · проверено ${moscowTimeString(state.lastFetch)} МСК`
+          : '';
+        $('#updateText').textContent = `курс на ${state.date}${stamp}`;
+      }
+    }
+
     async function loadRates(manual=false){
       setStatus('loading', manual ? 'обновляем курс…' : 'получаем курс…');
       const buttons = cards.map(c => $('.refresh', c));
@@ -453,7 +513,8 @@
         renderCard(card);
       });
 
-      $('.refresh', card).addEventListener('click', () => loadRates(true));
+      const refresh = $('.refresh', card.parentElement);
+      if (refresh) refresh.addEventListener('click', () => loadRates(true));
     }
 
     cards.forEach(setupCard);
