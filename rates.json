@@ -1,9 +1,9 @@
 {
   "source": "Банк России",
-  "date": null,
-  "updated_at": null,
+  "date": "25.09.2026",
+  "updated_at": "2026-09-24T16:34:31.015039+00:00",
   "rates": {
-    "USD": null,
-    "EUR": null
+    "USD": 84.9057,
+    "EUR": 96.8859
   }
 }
